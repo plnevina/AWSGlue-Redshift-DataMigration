@@ -1,2 +1,2 @@
 # AWSGlue-Redshift-DataMigration
-![Data Pipeline Diagram](./images/project str.gpg)
+![Data Pipeline Diagram](./images/project str.jpg)
