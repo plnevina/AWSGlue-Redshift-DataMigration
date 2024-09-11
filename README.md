@@ -6,4 +6,4 @@
 
 -Later an AWS Glue Job is created with specified connections and IAM roles to establish connection to Redshift.
 
--Once the data crawled,the Glue Job is started to load into Redshift Database with specified schemas.
+-Once the data crawled,the Glue Job is started to load into Redshift Database with specified schemas.The Job created is using Visual ETL Job.
