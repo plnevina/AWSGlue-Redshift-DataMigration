@@ -1,0 +1,105 @@
+import psycopg2
+
+# Define connection parameters
+host = 'newredshift-cluster.czsvbhfbuykt.ap-south-1.redshift.amazonaws.com'
+dbname = 'dev'
+user = 'username'
+password = 'password'
+port = '5439'
+
+# Construct the connection string
+conn_string = f"host={host} dbname={dbname} user={user} password={password} port={port}"
+
+# SQL commands to drop if exist
+drop_table_sql = "DROP TABLE IF EXISTS weather_data;"
+  
+#command to create table
+create_table_sql = """
+CREATE TABLE IF NOT EXISTS weather_data (
+    location VARCHAR(50),
+    date DATE,
+    temperature FLOAT,
+    humidity INTEGER,
+    precipitation FLOAT,
+    wind_speed INTEGER
+);
+"""
+#command to check data load into redshift table
+copy_sql = """
+COPY weather_data (location, date, temperature, humidity, precipitation, wind_speed)
+FROM 's3://my-weatherdata/cleaned_weather_data.csv'
+IAM_ROLE 'arn:aws:iam::381492148313:role/awsredshift_role'
+CSV IGNOREHEADER 1;
+"""
+
+try:
+    # Establish the connection
+    conn = psycopg2.connect(conn_string)
+    print("Connection successful")
+
+    # Create a cursor object
+    cursor = conn.cursor()
+
+    # Drop the existing table
+    cursor.execute(drop_table_sql)
+    print("Table dropped successfully")
+
+    # Create the table with the correct schema
+    cursor.execute(create_table_sql)
+    print("Table created successfully")
+
+    # Load data from S3 into the table
+    cursor.execute(copy_sql)
+    print("Data loaded successfully")
+
+    # Commit the transaction
+    conn.commit()
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+except psycopg2.DatabaseError as e:
+    print(f"Database error: {e}")
+    
+except Exception as e:
+    print(f"Error: {e}")
+    
+#  SQL commands to count rows and list the first 15 rows
+
+count_sql = "SELECT COUNT(*) FROM weather_data;"
+select_sql = "SELECT location, TO_CHAR(date, 'YYYY-MM-DD') AS date, temperature, humidity, precipitation, wind_speed FROM weather_data LIMIT 15;"
+
+try:
+    # Establish the connection
+    conn = psycopg2.connect(conn_string)
+    print("Connection successful")
+
+    # Create a cursor object
+    cursor = conn.cursor()
+
+    # Execute the SQL to count rows
+    cursor.execute(count_sql)
+    row_count = cursor.fetchone()[0]
+    print(f"Total number of rows in table: {row_count}")
+
+    # Execute the SQL to fetch the first 15 rows with formatted date
+    cursor.execute(select_sql)
+    rows = cursor.fetchall()
+    print("First 15 rows from table:")
+    for row in rows:
+        print(row)
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+except psycopg2.DatabaseError as e:
+    print(f"Database error: {e}")
+    
+except Exception as e:
+    print(f"Error: {e}")
+    
+    
+
+
